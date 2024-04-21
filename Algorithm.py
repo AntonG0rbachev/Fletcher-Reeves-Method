@@ -1,6 +1,5 @@
 import math
 import numpy
-from sympy import *
 from autograd import grad
 
 function = lambda x1, x2: x1 ** 2 + 7 * x2 ** 2 - x1 * x2 + x1
@@ -22,30 +21,23 @@ def fletcher_reeves_method(epsilon_1, epsilon_2, max_iter_counts, init_approxima
     iter_counts = 0
     check_counts = 0
     new_approximation = init_approximation.copy()
-    iter_counts += 1
-    gradient_in_point = numpy.array(gradient(new_approximation[0], new_approximation[1]))
-    if norm(gradient_in_point) < eps1:
-        x_min = new_approximation
-        return {"x_min": list(x_min), "f(x_min)": func(x_min[0], x_min[1]), "iterations": iter_counts}
-    d = -1 * gradient_in_point
-    t = calc_step(new_approximation[0], new_approximation[1], d[0], d[1])
-    prev_approximation = new_approximation.copy()
-    new_approximation = new_approximation + t * d
     while True:
         iter_counts += 1
         gradient_in_point = numpy.array(gradient(new_approximation[0], new_approximation[1]))
         gradient_norm = norm(gradient_in_point)
+        prev_approximation = new_approximation.copy()
         if gradient_norm < epsilon_1:
             x_min = new_approximation
             break
         if iter_counts >= max_iter_counts:
             x_min = new_approximation
             break
-        prev_gradient_in_point = gradient(prev_approximation[0], prev_approximation[1])
-        betta = (norm(gradient_in_point) ** 2) / (norm(prev_gradient_in_point) ** 2)
-        d = -1 * gradient_in_point + betta * d
+        prev_gradient_in_point = numpy.array(gradient(prev_approximation[0], prev_approximation[1]))
+        d = -1 * prev_gradient_in_point
+        if iter_counts > 1:
+            betta = (norm(gradient_in_point) ** 2) / (norm(prev_gradient_in_point) ** 2)
+            d = -1 * gradient_in_point + betta * d
         t = calc_step(new_approximation[0], new_approximation[1], d[0], d[1])
-        prev_approximation = new_approximation.copy()
         new_approximation = new_approximation + t * d
         if (norm(new_approximation - prev_approximation) < epsilon_2 and abs(
                 func(new_approximation[0], new_approximation[1]) - func(prev_approximation[0], prev_approximation[1]))):
